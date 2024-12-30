@@ -19,9 +19,32 @@ import reportsLineChartData from "layouts/dashboard/data/reportsLineChartData";
 // Dashboard components
 import Projects from "layouts/dashboard/components/Projects";
 import OrdersOverview from "layouts/dashboard/components/OrdersOverview";
+import { useEffect, useState } from "react";
+import { useGetUserQuery } from "../../Redux/API/User.Api";
+import { useSelector } from "react-redux";
 
 function Dashboard() {
   const { sales, tasks } = reportsLineChartData;
+  const [IsOnline, setIsOnline] = useState(false);
+  const [Status, setStatus] = useState(404);
+  const UserData = useSelector((state) => state.UserState);
+  const { data } = useGetUserQuery();
+  useEffect(() => {
+    fetch("http://localhost:3000")
+      .then((response) => {
+        if (response.ok) {
+          setIsOnline(true);
+          setStatus("Site is online");
+        } else {
+          setIsOnline(false);
+          setStatus(`Site responded with status: ${response.status}`);
+        }
+      })
+      .catch((error) => {
+        setIsOnline(false);
+        setStatus(`Fetch error: ${error}`);
+      });
+  }, []);
 
   return (
     <DashboardLayout>
@@ -29,7 +52,7 @@ function Dashboard() {
       <MDBox py={3}>
         <Grid container spacing={4}>
           <Grid item xs={12} md={12} lg={12}>
-            ksadlka
+            -----
           </Grid>
           <Grid item xs={12} md={6} lg={3}>
             <MDBox mb={1.5}>
@@ -37,11 +60,11 @@ function Dashboard() {
                 color="error"
                 icon="webasset"
                 title="PLATFORM"
-                count={"IQED"}
+                count={"iqed.in"}
                 percentage={{
-                  color: "error",
-                  amount: "offline",
-                  label: " : iqed.in",
+                  color: IsOnline ? "success" : "error",
+                  amount: IsOnline ? "Online" : "Offline",
+                  label: ` : ${Status}`,
                 }}
               />
             </MDBox>
@@ -52,11 +75,11 @@ function Dashboard() {
                 color="error"
                 icon="group"
                 title="Today's Users"
-                count="2,300"
+                count={data?.UserCount}
                 percentage={{
-                  color: "error",
-                  amount: "-3%",
-                  label: "than last week",
+                  color: data?.WeekRegisterCount == 0 ? "error" : "success",
+                  amount: data?.WeekRegisterCount + "%",
+                  label: "this week Registration",
                 }}
               />
             </MDBox>
@@ -67,11 +90,11 @@ function Dashboard() {
                 color="success"
                 icon="extension"
                 title="Total Question"
-                count="34k"
+                count="40"
                 percentage={{
                   color: "success",
-                  amount: "1%",
-                  label: "is active users",
+                  amount: "2.5%",
+                  label: "is Verified",
                 }}
               />
             </MDBox>
@@ -82,10 +105,10 @@ function Dashboard() {
                 color="warning"
                 icon="person_add"
                 title="Question Reports"
-                count="+10k"
+                count="10"
                 percentage={{
                   color: "warning",
-                  amount: "5%",
+                  amount: "1%",
                   label: "is resolved",
                 }}
               />
@@ -98,23 +121,26 @@ function Dashboard() {
             <Grid item xs={12} md={6} lg={4}>
               <MDBox mb={3}>
                 <ReportsBarChart
-                  color="success"
+                  color="dark"
                   title="daily Login"
                   description={
                     <>
-                      (<strong>+15%</strong>) increase in today logins.
+                      (<strong>{data?.WeekLogin}%</strong>) today logins
                     </>
                   }
                   date="updated 1 min ago"
-                  chart={reportsBarChartData}
+                  chart={{
+                    labels: ["M", "T", "W", "T", "F", "S", "S"],
+                    datasets: { label: "Login", data: [2, 1, 1, 1, 1, 0, 0] },
+                  }}
                 />
               </MDBox>
             </Grid>
             <Grid item xs={12} md={6} lg={4}>
               <MDBox mb={3}>
                 <ReportsLineChart
-                  color="success"
-                  title="daily sales"
+                  color="dark"
+                  title="daily Registration"
                   description={
                     <>
                       (<strong>+15%</strong>) increase in today sales.
